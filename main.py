@@ -1,44 +1,31 @@
-from turtle import Screen
-from paddle import Paddle
-from ball import Ball
-from scoreboard import Scoreboard
-import time
+import turtle, pandas
 
-screen = Screen()
-screen.bgcolor("black")
-screen.setup(width=800, height=600)
-screen.title("Pong")
-screen.tracer(0)
+screen = turtle.Screen()
+screen.title('U.S. States Game')
+image = "blank_states_img.gif"
+screen.addshape(image)
+turtle.shape(image)
 
-r_paddle = Paddle((350, 0))
-l_paddle = Paddle((-350, 0))
-ball = Ball()
-scoreboard = Scoreboard()
+data = pandas.read_csv("50_states.csv")
+all_states = data.state.to_list()
+guessed_states = []
 
-screen.listen()
-screen.onkey(r_paddle.go_up, "Up")
-screen.onkey(r_paddle.go_down, "Down")
-screen.onkey(l_paddle.go_up, "w")
-screen.onkey(l_paddle.go_down, "s")
+while len(guessed_states) < 50:
+    answer_state = screen.textinput(title=f"{len(guessed_states)}/50 States Guessed", prompt="What's another state's name?").title()
+    if answer_state == "Exit":
+        missing_states = []
+        for state in all_states:
+            if state not in guessed_states:
+                missing_states.append(state)
+        new_data = pandas.DataFrame(missing_states)
+        new_data.to_csv("states_to_learn.csv")
+        break
+    if answer_state in all_states:
+        guessed_states.append(answer_state)
+        t = turtle.Turtle()
+        t.hideturtle()
+        t.penup()
+        state_data = data[data.state == answer_state]
+        t.goto(state_data.x.item(), state_data.y.item())
+        t.write(answer_state)
 
-game_is_on = True
-while game_is_on:
-    time.sleep(ball.move_speed)
-    screen.update()
-    ball.move()
-
-    if ball.ycor() > 280 or ball.ycor() < -280:
-        ball.bounce_y()
-
-    if ball.distance(r_paddle) < 50 and ball.xcor() > 320 or ball.distance(l_paddle) < 50 and ball.xcor() < -320:
-        ball.bounce_x()
-
-    if ball.xcor() > 380:
-        ball.reset_position()
-        scoreboard.l_point()
-
-    if ball.xcor() < -380:
-        ball.reset_position()
-        scoreboard.r_point()
-
-screen.exitonclick()
